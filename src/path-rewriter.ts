@@ -46,7 +46,7 @@ export function createPathRewriter(
   }
 }
 
-function isValidRewriteConfig(rewriteConfig) {
+function isValidRewriteConfig(rewriteConfig): boolean | never {
   if (isFunction(rewriteConfig)) {
     return true;
   } else if (!isEmpty(rewriteConfig) && isPlainObject(rewriteConfig)) {
@@ -54,10 +54,10 @@ function isValidRewriteConfig(rewriteConfig) {
   } else if (isNil(rewriteConfig) || isEmptyObject(rewriteConfig)) {
     return false;
   } else {
-    invariant(
+    return invariant(
       false,
       '[ette-proxy] Invalid pathRewrite config. Expecting object with pathRewrite config or a rewrite function'
-    );
+    ) as never;
   }
 }
 

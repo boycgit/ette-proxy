@@ -1,5 +1,4 @@
-import Debug from 'debug';
-
+var Debug = require('debug');
 export const debug = Debug('ette-proxy');
 
 // 基本 log 构造函数

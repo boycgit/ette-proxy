@@ -58,7 +58,7 @@ module.exports = [
   // browser-friendly UMD build
   compileConfig({
     fromDir: '.build.cjs',
-    external: peerDeps,
+    external: peerDeps || [],
     outputFileName: path.parse(pkg.browser).name,
     shouldMinified: false,
     format: 'umd'
@@ -66,7 +66,7 @@ module.exports = [
   // browser-friendly UMD build, minified
   compileConfig({
     fromDir: '.build.cjs',
-    external: peerDeps,
+    external: peerDeps || [],
     outputFileName: path.parse(pkg.browser).name,
     shouldMinified: true,
     format: 'umd'
@@ -80,7 +80,7 @@ module.exports = [
   // `file` and `format` for each target)
   compileConfig({
     fromDir: '.build.cjs',
-    external: Object.assign({}, peerDeps, deps),
+    external: [].concat(peerDeps).concat(deps),
     outputFileName: path.parse(pkg.main).name,
     shouldMinified: false,
     format: 'cjs'
@@ -88,7 +88,7 @@ module.exports = [
   // minified
   compileConfig({
     fromDir: '.build.cjs',
-    external: Object.assign({}, peerDeps, deps),
+    external: [].concat(peerDeps).concat(deps),
     outputFileName: path.parse(pkg.main).name,
     shouldMinified: true,
     format: 'cjs'
@@ -97,7 +97,7 @@ module.exports = [
   // es
   compileConfig({
     fromDir: '.build.es',
-    external: Object.assign({}, peerDeps, deps),
+    external: [].concat(peerDeps).concat(deps),
     outputFileName: path.parse(pkg.module).name,
     shouldMinified: false,
     format: 'es'
@@ -105,7 +105,7 @@ module.exports = [
   // es, minified
   compileConfig({
     fromDir: '.build.es',
-    external: Object.assign({}, peerDeps, deps),
+    external: [].concat(peerDeps).concat(deps),
     outputFileName: path.parse(pkg.module).name,
     shouldMinified: true,
     format: 'es'
