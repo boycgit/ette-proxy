@@ -64,7 +64,7 @@ describe('在 ette-router 中使用', function() {
     });
   });
 
-  test.only('使用 函数 进行 rewrite', done => {
+  test('使用 函数 进行 rewrite', done => {
     let domainBefore = '';
     var proxyConfig = {
       target: proxyApp,

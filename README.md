@@ -18,7 +18,7 @@ npm install ette-proxy --save
 ```
 
 ```javascript
-var Router = require('ette-proxy');
+var proxy = require('ette-proxy');
 
 ```
 

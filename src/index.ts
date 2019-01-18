@@ -97,9 +97,9 @@ export class EtteProxy {
           debugMini('pathRewrite: No rewritten path found. (%s)', req.url);
         }
       } catch (err) {
-        debugMini('proxy 失败');
-
-        debugError(`[__applyPathRewrite] 替换路径出错：${JSON.stringify(err)}`);
+        debugError(
+          `[__applyPathRewrite] proxy 失败,替换路径出错：${JSON.stringify(err)}`
+        );
       }
     }
   };
