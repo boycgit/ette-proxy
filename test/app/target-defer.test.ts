@@ -1,12 +1,45 @@
-import Ette, { Request, Response } from 'ette';
+import Ette, { Request, middlewareFunction } from 'ette';
 import Router from 'ette-router';
 
-import proxy from '../../src/index';
+import proxy, { TUpdateTargetFn } from '../../src/index';
+import { any } from '_micromatch@3.1.10@micromatch';
 
 const ORI_SERVERNAME = 'fromServer';
 const PROXY_SERVERNAME = 'proxyServer';
 
-describe('[EtteProxy] 构造函数', function() {
+describe('[EtteProxy - defer] 构造函数', function() {
+  let app, proxyApp: Ette;
+  beforeEach(() => {
+    app = new Ette({ domain: ORI_SERVERNAME });
+    proxyApp = new Ette({ domain: PROXY_SERVERNAME });
+  });
+
+  test('在 defer 为 fasle 情况下，必须设置 target，否则报错', () => {
+    const proxyConfig = {};
+    expect(() => proxy(proxyConfig)).toThrow(Error);
+  });
+
+  test('在 defer 为 true 下，可以延迟设置 target', () => {
+    const proxyConfig = {
+      defer: true
+    };
+    expect(proxy(proxyConfig)).toBeInstanceOf(Function);
+  });
+
+  test('在 defer 为 true 下，设置完 target 才能使用', () => {
+    const proxyConfig = {
+      defer: true
+    };
+    const deferred = proxy(proxyConfig);
+    expect(() => (deferred as any)({} as any, null)).toThrow(Error);
+
+    expect(() => (deferred as any)(proxyApp)({} as any, null)).toBeInstanceOf(
+      Function
+    );
+  });
+});
+
+describe('[EtteProxy - defer] 方式构造出的中间件正常使用', function() {
   let app, proxyApp, router, client;
 
   beforeEach(() => {
@@ -39,18 +72,9 @@ describe('[EtteProxy] 构造函数', function() {
     proxyApp = new Ette({ domain: PROXY_SERVERNAME });
   });
 
-  test('创建的 proxy 是中间件函数', () => {
-    const proxyConfig = {
-      target: proxyApp
-    };
-
-    const middleware = proxy(proxyConfig);
-    expect(middleware).toBeInstanceOf(Function);
-  });
-
   test('context 没匹配上则不会代理', () => {
     const proxyConfig = {
-      target: proxyApp
+      defer: true
     };
 
     let isSkipped = false;
@@ -59,8 +83,11 @@ describe('[EtteProxy] 构造函数', function() {
       isSkipped = true;
     };
 
-    const middleware = proxy('/api', proxyConfig);
-    (middleware as any)(
+    const middleware = proxy(
+      '/api',
+      proxyConfig
+    );
+      (middleware(proxyApp) as middlewareFunction)(
       {
         request: new Request({ url: '/foo/bar' }),
         response: {}
@@ -73,7 +100,7 @@ describe('[EtteProxy] 构造函数', function() {
 
   test('context 匹配上则进行代理', () => {
     const proxyConfig = {
-      target: proxyApp
+      defer: true
     };
 
     let isSkipped = false;
@@ -83,7 +110,7 @@ describe('[EtteProxy] 构造函数', function() {
     };
 
     const middleware = proxy('/foo', proxyConfig);
-    (middleware as any)(
+    (middleware(proxyApp) as middlewareFunction)(
       {
         request: new Request({ url: '/foo/bar' }),
         response: {}
@@ -104,10 +131,10 @@ describe('[EtteProxy] 构造函数', function() {
     };
 
     const proxyConfig = {
-      target: proxyApp
+      defer: true
     };
     // 需要先挂载代理中间件，否则就错过了
-    app.use(proxy(filter, proxyConfig));
+    app.use(proxy(filter, proxyConfig)(proxyApp));
 
     // 然后再分别挂载路由
     app.use(router.routes());
@@ -147,10 +174,10 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('支持多路径匹配 - case 1', done => {
       const mwProxy = proxy(['/api', '/ajax'], {
-        target: proxyApp
+        defer: true
       });
 
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/api/some/endpoint').then(function() {
         expect(reqPath).toBe('/api/some/endpoint');
@@ -160,10 +187,10 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('支持多路径匹配 - case 2', done => {
       const mwProxy = proxy(['/api', '/ajax'], {
-        target: proxyApp
+        defer: true
       });
 
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/ajax/some/library').then(function() {
         expect(reqPath).toBe('/ajax/some/library');
@@ -173,11 +200,11 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('没匹配到的路径不会进行响应', done => {
       const mwProxy = proxy(['/api', '/ajax'], {
-        target: proxyApp
+        defer: true
       });
 
       // 需要先挂载代理中间件，否则就错过了
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/lorum/ipsum/endpoint').then(function() {
         expect(reqPath).toBe('');
@@ -205,10 +232,10 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('支持通配符匹配', done => {
       const mwProxy = proxy('/api/**', {
-        target: proxyApp
+        defer: true
       });
 
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/api/some/endpoint').then(function() {
         expect(reqPath).toBe('/api/some/endpoint');
@@ -222,11 +249,11 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('没匹配到的路径不会进行响应', done => {
       const mwProxy = proxy('/api/**', {
-        target: proxyApp
+        defer: true
       });
 
       // 需要先挂载代理中间件，否则就错过了
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/lorum/ipsum/endpoint').then(function() {
         expect(reqPath).toBe('');
@@ -254,10 +281,10 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('支持通配符匹配', done => {
       const mwProxy = proxy(['**/*.html', '!**.json'], {
-        target: proxyApp
+        defer: true
       });
 
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/api/some/endpoint/index.html').then(function() {
         expect(reqPath).toBe('/api/some/endpoint/index.html');
@@ -267,10 +294,10 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('支持通配符中的否定匹配', done => {
       const mwProxy = proxy(['**/*.html', '!**.json'], {
-        target: proxyApp
+        defer: true
       });
 
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/api/some/endpoint/data.json').then(function() {
         expect(reqPath).toBe('');
@@ -280,11 +307,11 @@ describe('[EtteProxy] 构造函数', function() {
 
     test('没匹配到的路径不会进行响应', done => {
       const mwProxy = proxy(['**/*.html', '!**.json'], {
-        target: proxyApp
+        defer: true
       });
 
       // 需要先挂载代理中间件，否则就错过了
-      app.use(mwProxy);
+      app.use(mwProxy(proxyApp));
 
       client.get('/api/some/endpoint/data').then(function() {
         expect(reqPath).toBe('');

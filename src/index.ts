@@ -5,10 +5,12 @@ import { createPathRewriter, TRewriter } from './path-rewriter';
 import { matchContext } from './context-matcher';
 import { debugMini, debugObject, debugError } from './debug';
 import { proxy } from './proxy-ette';
+import { invariant } from './util';
 
 export interface IProxyConfigOptions {
   target?: Application;
   pathRewrite?: object;
+  defer?: boolean; // 是否延时设置 target
 }
 
 export interface IProxyConfig {
@@ -17,19 +19,22 @@ export interface IProxyConfig {
 }
 
 export class EtteProxy {
-  config: IProxyConfig;
+  context?: any;
+  options: IProxyConfigOptions;
   pathRewriter?: TRewriter;
-  constructor(context, opts) {
-    const config = (this.config = createConfig(context, opts));
-
-    const proxyOptions: IProxyConfigOptions = config.options;
+  constructor(context, options) {
+    // const config = (this.config = createConfig(context, opts));
+    this.context = context;
+    this.options = options;
 
     debugMini(
-      `Proxy created: ${config.context} -> ${proxyOptions.target!.domain}`
+      `Proxy created: ${context} -> ${
+        options.defer ? '[defer] unknown target' : options.target!.domain
+      }`
     );
 
     // 相当于创建字符串替换规则
-    this.pathRewriter = createPathRewriter(proxyOptions.pathRewrite); // returns undefined when "pathRewrite" is not provided
+    this.pathRewriter = createPathRewriter(options.pathRewrite); // returns undefined when "pathRewrite" is not provided
   }
 
   /**
@@ -40,11 +45,11 @@ export class EtteProxy {
    * @return {Boolean}
    */
   shouldProxy = (req: Request) => {
-    const { config } = this;
+    const { context } = this;
     var path = req.path;
     debugMini(`[judging proxy] request: ${path}`);
 
-    return matchContext(config.context, path, req);
+    return matchContext(context, path, req);
   };
 
   /**
@@ -58,7 +63,7 @@ export class EtteProxy {
   prepareProxyRequest = req => {
     // https://github.com/chimurai/http-proxy-middleware/issues/17
     // https://github.com/chimurai/http-proxy-middleware/issues/94
-    const { options } = this.config;
+    const { options } = this;
 
     // store uri before it gets rewritten for logging
     var originalPath = req.path;
@@ -104,34 +109,60 @@ export class EtteProxy {
     }
   };
 
+  updateTarget = (target: Application) => {
+    invariant(target instanceof Application, '入参 target 必须是 ette 实例');
+    this.options.target = target;
+    debugMini(
+      `target update [defer=${this.options.defer}]: ${(this.options.target &&
+        this.options.target.domain) ||
+        '[unset]'} -> ${target.domain}`
+    );
+    return this.middleware;
+  };
+
+  proxyMiddleware: middlewareFunction = async (
+    ctx: IContext,
+    next?: middlewareFunction
+  ) => {
+    const { request, response } = ctx;
+    invariant(
+      !!this.options.target,
+      '[middleware] 缺少 "target" 选项. 使用前必须设置 target, 比如 proxy.setTarget(etteApp)'
+    );
+    if (this.shouldProxy(request)) {
+      debugMini(`[shouldProxy] request: [${request.method}] ${request.url}`);
+      const activeProxyOptions = this.prepareProxyRequest(request);
+      const proxyResponse = await proxy(request, response, activeProxyOptions);
+      debugObject(`proxy 返回的响应值: ${JSON.stringify(proxyResponse)}`);
+      ctx.response.status = proxyResponse.status;
+      ctx.response.body = proxyResponse.body;
+    } else {
+      debugMini(
+        `[not shouldProxy] request: [${request.method}] ${request.url}`
+      );
+      next();
+    }
+  };
+
   get middleware() {
-    const self = this;
-    return async function middleware(ctx: IContext, next: middlewareFunction) {
-      const { request, response } = ctx;
-      if (self.shouldProxy(request)) {
-        debugMini(`[shouldProxy] request: [${request.method}] ${request.url}`);
-        const activeProxyOptions = self.prepareProxyRequest(request);
-        const proxyResponse = await proxy(
-          request,
-          response,
-          activeProxyOptions
-        );
-        debugObject(`proxy 返回的响应值: ${JSON.stringify(proxyResponse)}`);
-        ctx.response.status = proxyResponse.status;
-        ctx.response.body = proxyResponse.body;
-      } else {
-        debugMini(
-          `[not shouldProxy] request: [${request.method}] ${request.url}`
-        );
-        next();
-      }
-    };
+    return this.proxyMiddleware;
   }
 }
 
-export default function(context?, opts?) {
-  const proxy = new EtteProxy(context, opts);
-  return proxy.middleware;
+export type TUpdateTargetFn = (target: Application) => middlewareFunction;
+/**
+ * 创建 proxy 实例 & 中间件
+ * 若传入的 defer 是为 true，表示延迟设置 proxy 的 target，防止每次请求创建 EtteProxy 实例
+ *
+ * @export
+ * @param {*} [context] - 匹配路径
+ * @param {*} [opts] - 选项
+ * @returns
+ */
+export default function(context?, opts?): TUpdateTargetFn | middlewareFunction {
+  const config = createConfig(context, opts);
+  const proxy = new EtteProxy(config.context, config.options);
+  return !config.options.defer ? proxy.middleware : proxy.updateTarget;
 }
 
 export * from './config-factory';

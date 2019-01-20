@@ -16,10 +16,15 @@ export function createConfig(context: any, opts?: object): IProxyConfig {
     config.options = Object.assign({}, config.options, opts);
   }
 
-  invariant(
-    !!config.options.target,
-    '缺少 "target" 选项. Example: {target: etteApp}'
-  );
+
+  // 非 defer 状态下，需要确保 target 已被设置
+  if (!config.options.defer) {
+    invariant(
+      !!config.options.target,
+      '缺少 "target" 选项. Example: {target: etteApp}'
+    );
+  }
+
 
   return config;
 }
