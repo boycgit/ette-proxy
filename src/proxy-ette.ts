@@ -17,11 +17,15 @@ export async function proxy(
 ) {
   const target: Application = options.target!;
   debugMini(
-    `proxing to [${req.method}]url: [${target.domain}]${req.url}, original res: ${JSON.stringify(
+    `proxing to [${req.method}]url: [${target.domain}]${
+      req.url
+    }, [original] res: ${JSON.stringify(
       res.toJSON()
-    )}`
+    )}, data: ${JSON.stringify(req.data)}, type: ${req.type}`
   );
   return await target.client[req.method.toLocaleLowerCase()](
-    req.url
+    req.url,
+    req.data,
+    req.type
   );
 }
