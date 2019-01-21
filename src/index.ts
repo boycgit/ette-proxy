@@ -1,4 +1,9 @@
-import Application, { middlewareFunction, Request, IContext } from 'ette';
+import Application, {
+  middlewareFunction,
+  Request,
+  IContext,
+  isEtteApplication
+} from 'ette';
 
 import { createConfig } from './config-factory';
 import { createPathRewriter, TRewriter } from './path-rewriter';
@@ -110,7 +115,7 @@ export class EtteProxy {
   };
 
   updateTarget = (target: Application) => {
-    invariant(target instanceof Application, '入参 target 必须是 ette 实例');
+    invariant(isEtteApplication(target), '入参 target 必须是 ette 实例');
     this.options.target = target;
     debugMini(
       `target update [defer=${this.options.defer}]: ${(this.options.target &&

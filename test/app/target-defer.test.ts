@@ -72,7 +72,7 @@ describe('[EtteProxy - defer] 方式构造出的中间件正常使用', function
     proxyApp = new Ette({ domain: PROXY_SERVERNAME });
   });
 
-  test('context 没匹配上则不会代理', () => {
+  test.only('context 没匹配上则不会代理', () => {
     const proxyConfig = {
       defer: true
     };
