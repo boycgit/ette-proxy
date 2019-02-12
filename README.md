@@ -45,9 +45,30 @@ npm test
 
 ### param
 
-example: https://repl.it/@boycgit/ette-proxy-param
 
-test your router rule: http://forbeslindesay.github.io/express-route-tester/
+### notice
+
+as the mechanism of middleware, you should always put proxy middleware before your router middleware：
+
+right way：
+```js
+   // 需要先挂载代理中间件，否则就错过了
+    app.use(proxy(proxyConfig));
+
+    // 然后再挂载路由
+    app.use(router.routes());
+```
+
+incorrect way：(will not proxy the router.routes())
+```js
+    // 先挂载挂载路由
+    app.use(router.routes());
+
+    // 后续挂载的代理功能对上述路由就不适用了
+    app.use(proxy(proxyConfig));
+
+```
+
 
 ## document
 
@@ -57,28 +78,6 @@ npm run doc
 
 then open the generated `out/index.html` file in your browser.
 
-
-
-注：因中间件机制，当你使用代理组件的时候，应该放在所有路由表应用之前：
-
-正确做法：
-```js
-   // 需要先挂载代理中间件，否则就错过了
-    app.use(proxy(proxyConfig));
-
-    // 然后再挂载路由
-    app.use(router.routes());
-```
-
-错误做法：
-```js
-    // 先挂载挂载路由
-    app.use(router.routes());
-
-    // 后续挂载的代理功能对上述路由就不适用了
-    app.use(proxy(proxyConfig));
-
-```
 
 
 ## License

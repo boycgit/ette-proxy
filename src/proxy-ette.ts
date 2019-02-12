@@ -16,15 +16,19 @@ export async function proxy(
   options: IProxyConfigOptions
 ) {
   const target: Application = options.target!;
+
+  // 这里必须使用 targetUrl，否则只用 req.path 的话会丢失 query 参数
+  const targetUrl = req.path + req.search;
   debugMini(
-    `proxing to [${req.method}]url: [${target.domain}]${
-      req.url
-    }, [original] res: ${JSON.stringify(
-      res.toJSON()
-    )}, data: ${JSON.stringify(req.data)}, type: ${req.type}`
+    `proxing to [${req.method}] url: [${target.domain}]${
+    targetUrl
+    }, [original] request: ${JSON.stringify(
+      req.toJSON()
+    )}, response: ${JSON.stringify(res.toJSON())}`
   );
+
   return await target.client[req.method.toLocaleLowerCase()](
-    req.url,
+    targetUrl,
     req.data,
     req.type
   );
