@@ -14,7 +14,7 @@ fs.removeSync('dist');
 fs.removeSync('.build.cjs');
 fs.removeSync('.build.es');
 
-function runTypeScriptBuild(outDir, target, declarations) {
+function runTypeScriptBuild(outDir, target, declarations, isCommonJS) {
   console.log(
     `Running typescript build (target: ${
       ts.ScriptTarget[target]
@@ -38,7 +38,8 @@ function runTypeScriptBuild(outDir, target, declarations) {
   options.outDir = outDir;
   options.declaration = declarations;
 
-  options.module = ts.ModuleKind.ES2015;
+  // 这个 isCommonJS 很重要，需要将代码转义成 commonjs 方式
+  options.module = isCommonJS ? ts.ModuleKind.CommonJS : ts.ModuleKind.ES2015;
   options.importHelpers = true;
   options.noEmitHelpers = true;
   if (declarations) options.declarationDir = path.resolve('.', 'dist');
@@ -61,11 +62,9 @@ function runTypeScriptBuild(outDir, target, declarations) {
   }
 }
 
-
 function build() {
-  runTypeScriptBuild('.build.cjs', ts.ScriptTarget.ES5, true);
+  runTypeScriptBuild('.build.cjs', ts.ScriptTarget.ES5, true, true);
   runTypeScriptBuild('.build.es', ts.ScriptTarget.ES5, false);
 }
 
-build()
-
+build();
