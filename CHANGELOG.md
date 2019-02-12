@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.1"></a>
+## [0.2.1](https://github.com/boycgit/ette-proxy/compare/v0.2.0...v0.2.1) (2019-02-12)
+
+
+### Bug Fixes
+
+* **bugfix:** 使用 isEtteApplication 代替 instanceof 来判断是否是 ette 应用 ([07eb289](https://github.com/boycgit/ette-proxy/commit/07eb289))
+* **bugfix:** 使用 targetUrl 来代替 req.url ([fc3ada9](https://github.com/boycgit/ette-proxy/commit/fc3ada9))
+* **bugfix:** 转发请求的时候，需要带上原始请求的 data 和 type 字段 ([e2cd4da](https://github.com/boycgit/ette-proxy/commit/e2cd4da))
+
+
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/boycgit/ette-proxy/compare/v0.1.4...v0.2.0) (2019-01-20)
 
