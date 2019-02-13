@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.3"></a>
+## [0.2.3](https://github.com/boycgit/ette-proxy/compare/v0.2.2...v0.2.3) (2019-02-13)
+
+
+### Bug Fixes
+
+* **打包配置:** 将 rollup 更改成 webpack 打包，只生成 umd.js 格式的输出文件 ([53e03cc](https://github.com/boycgit/ette-proxy/commit/53e03cc))
+
+
+
 <a name="0.2.2"></a>
 ## [0.2.2](https://github.com/boycgit/ette-proxy/compare/v0.2.1...v0.2.2) (2019-02-12)
 
