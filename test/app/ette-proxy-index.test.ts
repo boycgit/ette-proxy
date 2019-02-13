@@ -6,6 +6,7 @@ import proxy from '../../src/index';
 const ORI_SERVERNAME = 'fromServer';
 const PROXY_SERVERNAME = 'proxyServer';
 
+console.log(999, Ette);
 describe('[EtteProxy] 构造函数', function() {
   let app, proxyApp, router, client;
 

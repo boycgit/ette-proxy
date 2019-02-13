@@ -14,10 +14,10 @@ fs.removeSync('dist');
 fs.removeSync('.build.cjs');
 fs.removeSync('.build.es');
 
-function runTypeScriptBuild(outDir, target, declarations, isCommonJS) {
+function runTypeScriptBuild(outDir, target, { declarations }) {
   console.log(
     `Running typescript build (target: ${
-      ts.ScriptTarget[target]
+    ts.ScriptTarget[target]
     }) in ${outDir}/`
   );
 
@@ -38,8 +38,8 @@ function runTypeScriptBuild(outDir, target, declarations, isCommonJS) {
   options.outDir = outDir;
   options.declaration = declarations;
 
-  // 这个 isCommonJS 很重要，需要将代码转义成 commonjs 方式
-  options.module = isCommonJS ? ts.ModuleKind.CommonJS : ts.ModuleKind.ES2015;
+  options.module = ts.ModuleKind.ES2015; // 将代码转换成 ES6 的格式
+  options.moduleResolution = ts.ModuleResolutionKind.NodeJs;
   options.importHelpers = true;
   options.noEmitHelpers = true;
   if (declarations) options.declarationDir = path.resolve('.', 'dist');
@@ -53,7 +53,7 @@ function runTypeScriptBuild(outDir, target, declarations, isCommonJS) {
       .map(
         d =>
           `${ts.DiagnosticCategory[d.category]} ${d.code} (${d.file}:${
-            d.start
+          d.start
           }): ${d.messageText}`
       )
       .join('\n');
@@ -63,8 +63,8 @@ function runTypeScriptBuild(outDir, target, declarations, isCommonJS) {
 }
 
 function build() {
-  runTypeScriptBuild('.build.cjs', ts.ScriptTarget.ES5, true, true);
-  runTypeScriptBuild('.build.es', ts.ScriptTarget.ES5, false);
+  runTypeScriptBuild('.build.cjs', ts.ScriptTarget.ES5, { declarations: true }); // 只用生成一次声明就可以
+  runTypeScriptBuild('.build.es', ts.ScriptTarget.ES5, { declarations: false });
 }
 
 build();
