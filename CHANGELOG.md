@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.4"></a>
+## [0.2.4](https://github.com/boycgit/ette-proxy/compare/v0.2.3...v0.2.4) (2019-03-11)
+
+
+### Bug Fixes
+
+* **proxy 顺序:** 使用 await 关键字，确保异步流程的顺序 ([aaa75e2](https://github.com/boycgit/ette-proxy/commit/aaa75e2))
+
+
+
 <a name="0.2.3"></a>
 ## [0.2.3](https://github.com/boycgit/ette-proxy/compare/v0.2.2...v0.2.3) (2019-02-13)
 
