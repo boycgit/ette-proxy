@@ -145,7 +145,7 @@ export class EtteProxy {
       debugMini(
         `[not shouldProxy] request: [${request.method}] ${request.url}`
       );
-      next && next();
+      next && await next();
     }
   };
 
